@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Would You Hire Me? — Instant Resume Verdict</title>
+<meta name="description" content="Upload your resume. Get a brutally honest score, verdict, and top fixes. Free and instant.">
+<meta property="og:title" content="Would You Hire Me?">
+<meta property="og:description" content="Get a brutally honest verdict on your resume. Free, instant, shareable.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- PDF.js for PDF reading -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<!-- Mammoth for Word docs -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<!-- html2canvas for share card -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#f2f2ee;
+  --card:#ffffff;
+  --border:rgba(0,0,0,0.08);
+  --text:#1a1a2e;
+  --muted:#666;
+  --hint:#aaa;
+  --purple:#7F77DD;
+  --purple-dark:#534AB7;
+  --purple-light:#EEEDFE;
+  --teal:#1D9E75;
+  --teal-light:#E1F5EE;
+  --amber:#BA7517;
+  --amber-light:#FEF3E2;
+  --red:#C0392B;
+  --red-light:#FDECEC;
+  --dark:#1a1a2e;
+  --dark2:#16213e;
+  --radius:16px;
+  --radius-sm:10px;
+  --shadow:0 2px 20px rgba(0,0,0,0.07);
+}
+html{scroll-behavior:smooth;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* NAV */
+nav{background:var(--dark);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 30px rgba(0,0,0,0.4);}
+.nav-logo{font-size:17px;font-weight:800;color:#fff;letter-spacing:-0.3px;}
+.nav-logo span{color:var(--purple);}
+.nav-cta{font-size:13px;font-weight:600;color:#fff;text-decoration:none;background:var(--purple);padding:7px 16px;border-radius:20px;transition:background 0.2s;}
+.nav-cta:hover{background:var(--purple-dark);}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 55%,#0f3460 100%);padding:60px 24px 52px;text-align:center;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;top:-60px;right:-60px;width:300px;height:300px;background:radial-gradient(circle,rgba(127,119,221,0.15) 0%,transparent 70%);pointer-events:none;}
+.hero::after{content:'';position:absolute;bottom:-40px;left:-40px;width:250px;height:250px;background:radial-gradient(circle,rgba(29,158,117,0.1) 0%,transparent 70%);pointer-events:none;}
+.hero-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(127,119,221,0.15);border:1px solid rgba(127,119,221,0.35);border-radius:20px;padding:7px 18px;font-size:12px;color:#AFA9EC;font-weight:600;margin-bottom:26px;letter-spacing:0.02em;}
+.hero h1{font-size:clamp(36px,9vw,62px);font-weight:800;color:#fff;line-height:1.1;margin-bottom:18px;letter-spacing:-2px;}
+.hero h1 em{color:var(--purple);font-style:normal;}
+.hero p{font-size:17px;color:#8892a4;max-width:520px;margin:0 auto 36px;line-height:1.7;}
+.hero-stats{display:flex;justify-content:center;gap:14px;margin-bottom:38px;flex-wrap:wrap;}
+.stat-chip{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:14px 24px;text-align:center;backdrop-filter:blur(10px);}
+.stat-chip strong{display:block;font-size:26px;font-weight:800;color:#fff;line-height:1;}
+.stat-chip span{font-size:11px;color:#8892a4;margin-top:4px;display:block;}
+.hero-btn{display:inline-block;background:var(--purple);color:#fff;font-size:16px;font-weight:700;padding:17px 38px;border-radius:var(--radius-sm);border:none;cursor:pointer;transition:all 0.2s;letter-spacing:0.2px;box-shadow:0 4px 20px rgba(127,119,221,0.4);}
+.hero-btn:hover{background:var(--purple-dark);transform:translateY(-1px);box-shadow:0 6px 24px rgba(127,119,221,0.5);}
+.hero-btn:active{transform:scale(0.98);}
+
+/* CONTAINER */
+.container{max-width:720px;margin:0 auto;padding:0 16px 100px;}
+
+/* FEATURES */
+.features{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:40px 0 0;}
+.feat{background:var(--card);border:0.5px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);transition:transform 0.2s;}
+.feat:hover{transform:translateY(-2px);}
+.feat-icon{font-size:28px;margin-bottom:12px;}
+.feat-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:5px;}
+.feat-desc{font-size:12px;color:var(--muted);line-height:1.6;}
+
+/* FORM */
+.form-wrap{padding:36px 0 0;}
+.form-heading{text-align:center;margin-bottom:24px;}
+.form-heading h2{font-size:26px;font-weight:800;margin-bottom:8px;letter-spacing:-0.5px;}
+.form-heading p{font-size:14px;color:var(--muted);}
+
+.card{background:var(--card);border:0.5px solid var(--border);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow);margin-bottom:14px;}
+.card-label{font-size:11px;font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:0.09em;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+
+/* UPLOAD ZONE */
+.upload-zone{border:2px dashed #d0d0d0;border-radius:var(--radius-sm);padding:28px 20px;text-align:center;cursor:pointer;transition:all 0.2s;background:#fafafa;position:relative;}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--purple);background:var(--purple-light);}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.upload-icon{font-size:32px;margin-bottom:10px;}
+.upload-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px;}
+.upload-sub{font-size:12px;color:var(--muted);}
+.upload-types{display:flex;justify-content:center;gap:8px;margin-top:12px;}
+.upload-type{background:#f0f0f0;color:#666;font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px;}
+.file-selected{background:var(--teal-light);border-color:var(--teal);border-style:solid;}
+.file-selected .upload-title{color:var(--teal);}
+
+.divider-or{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--hint);font-size:12px;font-weight:600;}
+.divider-or::before,.divider-or::after{content:'';flex:1;height:1px;background:var(--border);}
+
+textarea{width:100%;min-height:160px;font-size:14px;padding:14px;border-radius:var(--radius-sm);border:1.5px solid #e8e8e8;background:#fafafa;color:var(--text);resize:vertical;font-family:'Inter',sans-serif;line-height:1.6;outline:none;transition:border 0.2s;}
+textarea:focus{border-color:var(--purple);background:#fff;}
+
+/* JOBS */
+.jobs-list{display:flex;flex-direction:column;gap:10px;margin-bottom:12px;}
+.job-row{display:flex;gap:8px;align-items:center;}
+.job-input{flex:1;font-size:14px;padding:11px 14px;border-radius:var(--radius-sm);border:1.5px solid #e8e8e8;background:#fafafa;color:var(--text);font-family:'Inter',sans-serif;outline:none;transition:border 0.2s;}
+.job-input:focus{border-color:var(--purple);background:#fff;}
+.job-remove{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s;}
+.job-remove:hover{background:var(--red-light);color:var(--red);border-color:var(--red);}
+.add-job-btn{width:100%;padding:10px;border-radius:var(--radius-sm);border:1.5px dashed #d0d0d0;background:transparent;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:6px;}
+.add-job-btn:hover{border-color:var(--purple);color:var(--purple);background:var(--purple-light);}
+
+.submit-btn{width:100%;padding:17px;background:var(--dark);color:#fff;border:none;border-radius:var(--radius-sm);font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.2s;font-family:'Inter',sans-serif;box-shadow:0 4px 20px rgba(26,26,46,0.3);letter-spacing:0.2px;}
+.submit-btn:hover{background:#0f3460;transform:translateY(-1px);}
+.submit-btn:active{transform:scale(0.98);}
+.submit-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+.privacy{font-size:11px;color:var(--hint);text-align:center;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:5px;}
+
+.hidden{display:none!important;}
+
+/* LOADING */
+#loadingSection{text-align:center;padding:70px 20px;}
+.load-icon{font-size:56px;display:block;margin-bottom:20px;animation:bob 1.6s ease-in-out infinite;}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+#loadingMsg{font-size:18px;font-weight:600;margin-bottom:14px;}
+.dots span{display:inline-block;animation:blink 1.2s infinite;font-size:30px;color:var(--hint);}
+.dots span:nth-child(2){animation-delay:0.2s;}
+.dots span:nth-child(3){animation-delay:0.4s;}
+@keyframes blink{0%,80%,100%{opacity:0.1}40%{opacity:1}}
+
+/* RESULTS */
+.result-hero{background:linear-gradient(135deg,#1a1a2e,#0f3460);border-radius:var(--radius) var(--radius) 0 0;padding:36px 20px;text-align:center;}
+.score-ring{width:120px;height:120px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 18px;border:5px solid;}
+.score-num{font-size:42px;font-weight:800;line-height:1;}
+.score-denom{font-size:13px;opacity:0.45;margin-top:2px;}
+.verdict-title{font-size:22px;font-weight:800;color:#fff;margin-bottom:8px;}
+.verdict-sub{font-size:14px;color:#8892a4;max-width:400px;margin:0 auto;}
+
+.result-body{background:var(--card);border-radius:0 0 var(--radius) var(--radius);padding:24px;border:0.5px solid var(--border);border-top:none;box-shadow:var(--shadow);}
+.section-lbl{font-size:11px;font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:0.09em;margin-bottom:14px;}
+.roast-box{background:#f9f9f7;border-left:4px solid var(--purple);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:16px 18px;font-size:14px;font-style:italic;color:#444;line-height:1.75;margin-bottom:24px;}
+
+.score-row{display:flex;align-items:center;gap:12px;margin-bottom:6px;}
+.score-row-label{font-size:13px;color:var(--text);font-weight:600;width:140px;flex-shrink:0;}
+.score-track{flex:1;height:8px;background:#f0f0f0;border-radius:4px;overflow:hidden;}
+.score-fill{height:100%;border-radius:4px;transition:width 1s cubic-bezier(.4,0,.2,1);}
+.score-val{font-size:13px;font-weight:700;min-width:36px;text-align:right;}
+.score-comment-txt{font-size:11px;color:var(--hint);margin:0 0 14px 152px;}
+
+.divider{height:0.5px;background:var(--border);margin:22px 0;}
+
+/* JOB FITS */
+.job-fit-card{background:#fafafa;border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-bottom:10px;}
+.job-fit-card:last-child{margin-bottom:0;}
+.job-fit-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:10px;}
+.job-fit-role{font-size:14px;font-weight:700;color:var(--text);}
+.fit-badge{font-size:13px;font-weight:800;padding:4px 12px;border-radius:20px;flex-shrink:0;}
+.job-fit-verdict{font-size:13px;color:var(--muted);margin-bottom:8px;line-height:1.5;}
+.job-fit-bar{height:6px;background:#eee;border-radius:3px;overflow:hidden;margin-bottom:8px;}
+.job-fit-fill{height:100%;border-radius:3px;transition:width 1s ease;}
+.job-fit-tip{font-size:12px;color:var(--purple-dark);font-weight:500;display:flex;gap:6px;align-items:flex-start;}
+
+/* FIXES */
+.fix-item{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-bottom:0.5px solid var(--border);}
+.fix-item:last-child{border-bottom:none;}
+.fix-dot{width:10px;height:10px;border-radius:50%;margin-top:5px;flex-shrink:0;}
+.fix-issue{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.fix-detail{font-size:13px;color:var(--muted);line-height:1.5;}
+.badge{display:inline-block;font-size:10px;padding:2px 9px;border-radius:20px;font-weight:700;flex-shrink:0;}
+.badge-red{background:var(--red-light);color:var(--red);}
+.badge-amber{background:var(--amber-light);color:var(--amber);}
+.badge-green{background:var(--teal-light);color:var(--teal);}
+
+/* SHARE CARD */
+#shareCard{background:#1a1a2e;border-radius:var(--radius);padding:26px;margin-bottom:14px;}
+.sc-eyebrow{font-size:10px;color:#333;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:18px;font-weight:700;}
+.sc-top{display:flex;align-items:center;gap:18px;margin-bottom:20px;}
+.sc-ring{width:80px;height:80px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;}
+.sc-ring-num{font-size:30px;font-weight:800;line-height:1;}
+.sc-ring-denom{font-size:10px;opacity:0.4;}
+.sc-verdict{font-size:17px;font-weight:800;color:#fff;margin-bottom:5px;line-height:1.3;}
+.sc-sub{font-size:12px;color:#8892a4;line-height:1.4;}
+.sc-bars{margin-bottom:18px;}
+.sc-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.sc-bar-label{font-size:11px;color:#777;width:120px;flex-shrink:0;}
+.sc-bar-track{flex:1;height:5px;background:#2a2a4a;border-radius:3px;overflow:hidden;}
+.sc-bar-fill{height:100%;border-radius:3px;}
+.sc-bar-num{font-size:11px;font-weight:700;min-width:28px;text-align:right;}
+.sc-quote{font-size:12px;color:#8892a4;font-style:italic;line-height:1.6;border-top:0.5px solid #2a2a4a;padding-top:14px;margin-bottom:14px;}
+.sc-footer{display:flex;justify-content:space-between;align-items:center;}
+.sc-tag{font-size:11px;color:#2a2a4a;font-weight:700;}
+.sc-brand{font-size:12px;color:var(--purple);font-weight:700;}
+
+.dl-btn{width:100%;padding:14px;background:var(--purple);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s;font-family:'Inter',sans-serif;box-shadow:0 4px 16px rgba(127,119,221,0.3);}
+.dl-btn:hover{background:var(--purple-dark);}
+.dl-btn:disabled{opacity:0.6;cursor:not-allowed;}
+.share-hint{font-size:11px;color:var(--hint);text-align:center;margin-top:8px;}
+
+.reset-btn{width:100%;padding:13px;font-size:14px;border-radius:var(--radius-sm);border:0.5px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;margin-top:10px;font-family:'Inter',sans-serif;transition:background 0.2s;}
+.reset-btn:hover{background:var(--card);}
+
+footer{background:var(--dark);padding:28px 24px;text-align:center;}
+footer p{font-size:13px;color:#3a3a5a;}
+footer a{color:var(--purple);text-decoration:none;font-weight:600;}
+footer .ai-note{font-size:10px;color:#252540;margin-top:8px;}
+
+@media(max-width:500px){
+  .features{grid-template-columns:1fr;}
+  .hero h1{letter-spacing:-1px;}
+  .stat-chip{padding:10px 16px;}
+  .score-comment-txt{margin-left:0;}
+  .score-row-label{width:110px;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">Would You <span>Hire Me?</span></div>
+  <a class="nav-cta" href="#roast">Try it free →</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-pill">🔥 Brutal. Honest. Free.</div>
+  <h1>Would You<br><em>Hire Me?</em></h1>
+  <p>Upload your resume and get an instant score, honest critique, and personalized fixes — for every role you're targeting.</p>
+  <div class="hero-stats">
+    <div class="stat-chip"><strong>10K+</strong><span>Resumes reviewed</span></div>
+    <div class="stat-chip"><strong>78</strong><span>Average score</span></div>
+    <div class="stat-chip"><strong>Free</strong><span>No signup needed</span></div>
+  </div>
+  <a href="#roast" class="hero-btn">🧐 Roast My Resume</a>
+</div>
+
+<div class="container">
+
+  <!-- FEATURES -->
+  <div class="features">
+    <div class="feat"><div class="feat-icon">🎯</div><div class="feat-title">Instant Score</div><div class="feat-desc">Get rated 0–100 with a full breakdown across 4 key hiring criteria.</div></div>
+    <div class="feat"><div class="feat-icon">🔥</div><div class="feat-title">No Sugarcoating</div><div class="feat-desc">Real feedback that helps — not the vague fluff you get from friends.</div></div>
+    <div class="feat"><div class="feat-icon">💼</div><div class="feat-title">Multi-Role Fit</div><div class="feat-desc">Add multiple target roles and see exactly how well you fit each one.</div></div>
+    <div class="feat"><div class="feat-icon">📤</div><div class="feat-title">Shareable Card</div><div class="feat-desc">Download your score card and post it. Challenge friends to beat your score.</div></div>
+  </div>
+
+  <!-- FORM -->
+  <div class="form-wrap" id="roast">
+    <div class="form-heading">
+      <h2>Get your verdict</h2>
+      <p>Takes about 15 seconds. No account needed.</p>
+    </div>
+
+    <div id="inputSection">
+
+      <!-- UPLOAD -->
+      <div class="card">
+        <div class="card-label">📎 Upload your resume</div>
+        <div class="upload-zone" id="uploadZone">
+          <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.txt" onchange="handleFile(this)">
+          <div class="upload-icon">📄</div>
+          <div class="upload-title" id="uploadTitle">Drop your resume here or click to browse</div>
+          <div class="upload-sub" id="uploadSub">We'll extract the text automatically</div>
+          <div class="upload-types">
+            <span class="upload-type">PDF</span>
+            <span class="upload-type">Word</span>
+            <span class="upload-type">TXT</span>
+          </div>
+        </div>
+
+        <div class="divider-or">or type / paste below</div>
+
+        <textarea id="resumeInput" placeholder="Paste your resume text here... or describe your experience, skills, and background."></textarea>
+      </div>
+
+      <!-- JOBS -->
+      <div class="card">
+        <div class="card-label">🎯 Roles you're applying for</div>
+        <div class="jobs-list" id="jobsList">
+          <div class="job-row">
+            <input class="job-input" type="text" placeholder="e.g. Senior QA Engineer at TD Bank" />
+          </div>
+        </div>
+        <button class="add-job-btn" onclick="addJob()">＋ Add another role</button>
+        <div style="font-size:11px;color:var(--hint);margin-top:10px;">We'll score your resume fit for each role separately</div>
+      </div>
+
+      <button class="submit-btn" id="roastBtn" onclick="roast()">
+        <span>🧐</span> Get My Verdict
+      </button>
+      <p class="privacy">🔒 Your resume is never stored or shared</p>
+    </div>
+
+    <!-- LOADING -->
+    <div id="loadingSection" class="hidden">
+      <span class="load-icon">🧐</span>
+      <p id="loadingMsg">Reviewing your resume...</p>
+      <div class="dots"><span>•</span><span>•</span><span>•</span></div>
+    </div>
+
+    <!-- RESULTS -->
+    <div id="resultSection" class="hidden">
+
+      <div style="border-radius:var(--radius);overflow:hidden;border:0.5px solid var(--border);margin-bottom:14px;box-shadow:var(--shadow);">
+        <div class="result-hero">
+          <div class="score-ring" id="scoreRing">
+            <span class="score-num" id="scoreNum"></span>
+            <span class="score-denom">/ 100</span>
+          </div>
+          <div class="verdict-title" id="verdictTitle"></div>
+          <div class="verdict-sub" id="verdictSub"></div>
+        </div>
+        <div class="result-body">
+
+          <div class="section-lbl">What the hiring manager thinks</div>
+          <div class="roast-box" id="roastText"></div>
+
+          <div class="section-lbl">Scorecard</div>
+          <div id="scorecard"></div>
+
+          <div id="jobFitsSection">
+            <div class="divider"></div>
+            <div class="section-lbl">Role fit analysis</div>
+            <div id="jobFits"></div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="section-lbl">Top fixes — ranked by impact</div>
+          <div id="fixes"></div>
+        </div>
+      </div>
+
+      <!-- SHARE CARD -->
+      <div class="card">
+        <div class="section-lbl">Share your result</div>
+        <div id="shareCard">
+          <div class="sc-eyebrow">Would You Hire Me?</div>
+          <div class="sc-top">
+            <div class="sc-ring" id="scRing">
+              <span class="sc-ring-num" id="scNum"></span>
+              <span class="sc-ring-denom">/ 100</span>
+            </div>
+            <div>
+              <div class="sc-verdict" id="scTitle"></div>
+              <div class="sc-sub" id="scSub"></div>
+            </div>
+          </div>
+          <div class="sc-bars" id="scBars"></div>
+          <div class="sc-quote" id="scQuote"></div>
+          <div class="sc-footer">
+            <span class="sc-tag">#WouldYouHireMe</span>
+            <span class="sc-brand">wouldyouhireme.app</span>
+          </div>
+        </div>
+        <button class="dl-btn" id="dlBtn" onclick="downloadCard()">⬇ Download Share Card</button>
+        <p class="share-hint">Post on LinkedIn, X, or Instagram · Challenge friends to beat your score 🔥</p>
+      </div>
+
+      <button class="reset-btn" onclick="reset()">↩ Try another resume</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>© 2025 WouldYouHireMe.app · <a href="#">#WouldYouHireMe</a> · Free forever · No signup needed</p>
+  <p class="ai-note">Powered by advanced language models</p>
+</footer>
+
+<script>
+// PDF.js setup
+if(window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+const MSGS=['Reviewing your resume...','Checking for red flags...','Consulting 17 years of experience...','Questioning your life choices...','Counting the buzzwords...','Almost done judging you...'];
+
+function show(id){document.getElementById(id).classList.remove('hidden');}
+function hide(id){document.getElementById(id).classList.add('hidden');}
+
+// FILE UPLOAD
+async function handleFile(input){
+  const file = input.files[0];
+  if(!file) return;
+  const zone = document.getElementById('uploadZone');
+  const title = document.getElementById('uploadTitle');
+  const sub = document.getElementById('uploadSub');
+  title.textContent = '⏳ Reading ' + file.name + '...';
+  sub.textContent = 'Please wait...';
+  zone.classList.add('file-selected');
+
+  try {
+    let text = '';
+    if(file.type === 'application/pdf' || file.name.endsWith('.pdf')){
+      text = await extractPDF(file);
+    } else if(file.name.endsWith('.docx') || file.name.endsWith('.doc')){
+      text = await extractWord(file);
+    } else {
+      text = await file.text();
+    }
+    document.getElementById('resumeInput').value = text;
+    title.textContent = '✅ ' + file.name + ' loaded!';
+    sub.textContent = 'Text extracted — scroll down to review or edit';
+  } catch(e){
+    title.textContent = '❌ Could not read file';
+    sub.textContent = 'Please paste your resume text manually below';
+    zone.classList.remove('file-selected');
+    console.error(e);
+  }
+}
+
+async function extractPDF(file){
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+  let text = '';
+  for(let i=1; i<=pdf.numPages; i++){
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map(s=>s.str).join(' ') + '\n';
+  }
+  return text.trim();
+}
+
+async function extractWord(file){
+  const arrayBuffer = await file.arrayBuffer();
+  const result = await mammoth.extractRawText({arrayBuffer});
+  return result.value.trim();
+}
+
+// DRAG & DROP
+const zone = document.getElementById('uploadZone');
+zone.addEventListener('dragover', e=>{e.preventDefault();zone.classList.add('drag');});
+zone.addEventListener('dragleave', ()=>zone.classList.remove('drag'));
+zone.addEventListener('drop', e=>{
+  e.preventDefault();
+  zone.classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if(file){
+    document.getElementById('fileInput').files = e.dataTransfer.files;
+    handleFile(document.getElementById('fileInput'));
+  }
+});
+
+// JOBS
+function addJob(){
+  const list = document.getElementById('jobsList');
+  const row = document.createElement('div');
+  row.className = 'job-row';
+  row.innerHTML = `<input class="job-input" type="text" placeholder="e.g. Product Manager at Shopify"><button class="job-remove" onclick="this.parentElement.remove()" title="Remove">✕</button>`;
+  list.appendChild(row);
+  row.querySelector('input').focus();
+}
+
+function getJobs(){
+  return [...document.querySelectorAll('.job-input')]
+    .map(i=>i.value.trim())
+    .filter(Boolean);
+}
+
+// ROAST
+function ringStyle(s){
+  if(s>=70)return{bg:'rgba(29,158,117,0.12)',border:'#1D9E75',text:'#1D9E75',scBg:'#085041',scText:'#9FE1CB'};
+  if(s>=45)return{bg:'rgba(186,117,23,0.12)',border:'#BA7517',text:'#BA7517',scBg:'#633806',scText:'#FAC775'};
+  return{bg:'rgba(192,57,43,0.12)',border:'#C0392B',text:'#C0392B',scBg:'#7a1f1f',scText:'#F7C1C1'};
+}
+function barCol(s){return s>=7?'#1D9E75':s>=4?'#EF9F27':'#E24B4A';}
+function badgeCls(p){return p==='high'?'badge-red':p==='medium'?'badge-amber':'badge-green';}
+function fitColor(f){return f>=70?'#1D9E75':f>=45?'#EF9F27':'#E24B4A';}
+function fitBadgeBg(f){return f>=70?'rgba(29,158,117,0.15)':f>=45?'rgba(239,159,39,0.15)':'rgba(228,75,74,0.15)';}
+
+async function roast(){
+  const resume = document.getElementById('resumeInput').value.trim();
+  if(!resume){alert('Please upload your resume or paste your experience first!');return;}
+  const jobs = getJobs();
+  document.getElementById('roastBtn').disabled=true;
+  hide('inputSection');
+  show('loadingSection');
+  let mi=0;
+  const iv=setInterval(()=>{
+    mi=(mi+1)%MSGS.length;
+    document.getElementById('loadingMsg').textContent=MSGS[mi];
+  },2200);
+  try{
+    const res=await fetch('/api/roast',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({resume,jobs})
+    });
+    const r=await res.json();
+    if(r.error)throw new Error(r.error);
+    clearInterval(iv);
+    render(r);
+  }catch(e){
+    clearInterval(iv);
+    alert(e.message||'Something went wrong. Please try again.');
+    hide('loadingSection');
+    show('inputSection');
+    document.getElementById('roastBtn').disabled=false;
+  }
+}
+
+function render(r){
+  const rc=ringStyle(r.score);
+  const ring=document.getElementById('scoreRing');
+  ring.style.background=rc.bg;
+  ring.style.borderColor=rc.border;
+  document.getElementById('scoreNum').style.color=rc.text;
+  document.getElementById('scoreNum').textContent=r.score;
+  document.getElementById('verdictTitle').textContent=r.verdictTitle;
+  document.getElementById('verdictSub').textContent=r.verdictSub;
+  document.getElementById('roastText').textContent='"'+r.roast+'"';
+
+  document.getElementById('scorecard').innerHTML=r.scorecard.map(s=>`
+    <div class="score-row">
+      <span class="score-row-label">${s.label}</span>
+      <div class="score-track"><div class="score-fill" style="width:${s.score*10}%;background:${barCol(s.score)};"></div></div>
+      <span class="score-val" style="color:${barCol(s.score)};">${s.score}/10</span>
+    </div>
+    <div class="score-comment-txt">${s.comment}</div>`).join('');
+
+  // Job fits
+  if(r.jobFits && r.jobFits.length>0){
+    show('jobFitsSection');
+    document.getElementById('jobFits').innerHTML=r.jobFits.map(j=>`
+      <div class="job-fit-card">
+        <div class="job-fit-top">
+          <div class="job-fit-role">💼 ${j.role}</div>
+          <div class="fit-badge" style="background:${fitBadgeBg(j.fit)};color:${fitColor(j.fit)};">${j.fit}% fit</div>
+        </div>
+        <div class="job-fit-bar"><div class="job-fit-fill" style="width:${j.fit}%;background:${fitColor(j.fit)};"></div></div>
+        <div class="job-fit-verdict">${j.verdict}</div>
+        <div class="job-fit-tip">💡 <span>${j.tip}</span></div>
+      </div>`).join('');
+  } else {
+    hide('jobFitsSection');
+  }
+
+  document.getElementById('fixes').innerHTML=r.fixes.map(f=>`
+    <div class="fix-item">
+      <div class="fix-dot" style="background:${f.priority==='high'?'#E24B4A':f.priority==='medium'?'#EF9F27':'#1D9E75'};"></div>
+      <div>
+        <div class="fix-issue"><span class="badge ${badgeCls(f.priority)}">${f.priority}</span>${f.issue}</div>
+        <div class="fix-detail">→ ${f.fix}</div>
+      </div>
+    </div>`).join('');
+
+  // Share card
+  const scRing=document.getElementById('scRing');
+  scRing.style.background=rc.scBg;
+  document.getElementById('scNum').style.color=rc.scText;
+  document.getElementById('scNum').textContent=r.score;
+  document.getElementById('scTitle').textContent=r.verdictTitle;
+  document.getElementById('scSub').textContent=r.verdictSub;
+  document.getElementById('scQuote').textContent='"'+r.roast+'"';
+  document.getElementById('scBars').innerHTML=r.scorecard.map(s=>`
+    <div class="sc-bar-row">
+      <span class="sc-bar-label">${s.label}</span>
+      <div class="sc-bar-track"><div class="sc-bar-fill" style="width:${s.score*10}%;background:${barCol(s.score)};"></div></div>
+      <span class="sc-bar-num" style="color:${barCol(s.score)};">${s.score}/10</span>
+    </div>`).join('');
+
+  hide('loadingSection');
+  show('resultSection');
+  window.scrollTo({top:document.getElementById('roast').offsetTop-20,behavior:'smooth'});
+}
+
+async function downloadCard(){
+  const btn=document.getElementById('dlBtn');
+  btn.textContent='Generating...';
+  btn.disabled=true;
+  try{
+    const canvas=await html2canvas(document.getElementById('shareCard'),{backgroundColor:'#1a1a2e',scale:2,useCORS:true,logging:false});
+    const a=document.createElement('a');
+    a.href=canvas.toDataURL('image/png');
+    a.download='wouldyouhireme.png';
+    a.click();
+    btn.innerHTML='✓ Downloaded! Now share it 🚀';
+    setTimeout(()=>{btn.innerHTML='⬇ Download Share Card';btn.disabled=false;},3000);
+  }catch(e){
+    btn.innerHTML='⬇ Download Share Card';
+    btn.disabled=false;
+    alert('Please screenshot the dark card manually to share!');
+  }
+}
+
+function reset(){
+  hide('resultSection');
+  hide('loadingSection');
+  show('inputSection');
+  document.getElementById('resumeInput').value='';
+  document.getElementById('fileInput').value='';
+  document.getElementById('uploadZone').classList.remove('file-selected');
+  document.getElementById('uploadTitle').textContent='Drop your resume here or click to browse';
+  document.getElementById('uploadSub').textContent="We'll extract the text automatically";
+  document.getElementById('roastBtn').disabled=false;
+  document.getElementById('jobsList').innerHTML=`<div class="job-row"><input class="job-input" type="text" placeholder="e.g. Senior QA Engineer at TD Bank"></div>`;
+  window.scrollTo({top:document.getElementById('roast').offsetTop-20,behavior:'smooth'});
+}
+</script>
+</body>
+</html>
