@@ -57,8 +57,9 @@ Respond ONLY with a valid JSON object. No markdown, no backticks, no extra text:
       })
     });
     const data = await response.json();
-    const text = data.content.map(i => i.text || '').join('');
-    const clean = text.replace(/```json|```/g, '').trim();
+    console.log('API Response:', JSON.stringify(data));
+    if (!data.content) return res.status(500).json({ error: 'API Error: ' + JSON.stringify(data) });
+    const text = data.content.map(i => i.text || '').join('');    const clean = text.replace(/```json|```/g, '').trim();
     const result = JSON.parse(clean);
     res.status(200).json(result);
   } catch (err) {
