@@ -1,11 +1,7 @@
 {
   "version": 2,
-  "builds": [
-    { "src": "api/roast.js", "use": "@vercel/node" },
-    { "src": "public/**", "use": "@vercel/static" }
-  ],
-  "routes": [
-    { "src": "/api/roast", "dest": "/api/roast.js" },
-    { "src": "/(.*)", "dest": "/public/$1" }
+  "rewrites": [
+    { "source": "/api/roast", "destination": "/api/roast.js" },
+    { "source": "/(.*)", "destination": "/public/$1" }
   ]
 }
